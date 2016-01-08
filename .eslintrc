@@ -1,0 +1,10 @@
+{
+    "env": {
+        "node": true
+    },
+    "extends": "leisurelink",
+    "rules": {
+        "no-console": 0,
+        "complexity": 0
+    }
+}

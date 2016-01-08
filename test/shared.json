@@ -1,0 +1,6 @@
+{
+  "shared": {
+    "one": "shared value 1",
+    "three": "shared value 3"
+  }
+}
