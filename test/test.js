@@ -1,16 +1,16 @@
 'use strict';
 
-var exec = require('child_process').exec;
-var expect = require('chai').expect;
-var Promise = require('bluebird');
-var consul = require('consul');
+const exec = require('child_process').exec;
+const expect = require('chai').expect;
+const Promise = require('bluebird');
+const consul = require('consul');
 
-function execute(commandLine) {
-  return new Promise(function(resolve, reject) {
+const execute = (commandLine) => {
+  return new Promise((resolve, reject) => {
     exec(commandLine, {
       cwd: __dirname,
       env: process.env
-    }, function(err, stdout, stderr) {
+    }, (err, stdout, stderr) => {
       if (err) {
         reject(err);
       } else {
@@ -18,78 +18,78 @@ function execute(commandLine) {
       }
     });
   });
-}
+};
 
-describe('consul-to-json', function() {
-  var config = {
+describe('consul-to-json', () => {
+  const config = {
     host: process.env.CONSUL_HOST || 'consul.service.consul',
     port: process.env.CONSUL_PORT || '8500',
     secure: process.env.CONSUL_SECURE === 'true'
   };
 
-  var client = consul(config);
+  const client = consul(config);
   Promise.promisifyAll(client.kv);
 
-  before(function(){
+  before(() => {
     return execute('node ../node_modules/consul-kv-sync/consul-kv-sync.js ./shared.json')
-      .then(function() {
+      .then(() => {
         return execute('node ../node_modules/consul-kv-sync/consul-kv-sync.js ./service.json');
       });
   });
 
-  after(function(){
+  after(() => {
     return client.kv.delAsync({ key:'shared', recurse:true })
-      .then(function(){
+      .then(() => {
         return client.kv.delAsync({ key:'service', recurse:true });
       });
   });
 
-  describe('#run', function() {
-    var output;
-    describe('non-existant service configuration', function(){
-      before(function(){
+  describe('#run', () => {
+    let output;
+    describe('non-existant service configuration', () => {
+      before(() => {
         return execute('node ../consul-to-json.js my-other-service')
-          .then(function(result){
+          .then((result) => {
             output = JSON.parse(result.stdout.toString());
           });
       });
 
-      it('should set output valid json', function() {
+      it('should set output valid json', () => {
         expect(output).to.be.ok;
       });
 
-      it('should set values to only shared values', function() {
+      it('should set values to only shared values', () => {
         expect(output.one).to.eql('shared value 1');
         expect(output.two).to.be.undefined;
         expect(output.three).to.eql('shared value 3');
       });
     });
 
-    describe('existing service configuration', function(){
-      before(function(){
+    describe('existing service configuration', () => {
+      before(() => {
         return execute('node ../consul-to-json.js service')
-          .then(function(result){
+          .then((result) => {
             output = JSON.parse(result.stdout.toString());
           });
       });
 
-      it('should set unique value to correct value', function() {
+      it('should set unique value to correct value', () => {
         expect(output).to.be.ok;
         expect(output.two).to.eql('value 2');
       });
 
-      it('should set shared value to correct value', function() {
+      it('should set shared value to correct value', () => {
         expect(output).to.be.ok;
         expect(output.three).to.eql('shared value 3');
       });
 
-      it('should set overridden value to correct value', function() {
+      it('should set overridden value to correct value', () => {
         expect(output).to.be.ok;
         expect(output.one).to.eql('value 1');
       });
 
-      it('should set array values correctly', function() {
-        var items = output.arrayOne;
+      it('should set array values correctly', () => {
+        const items = output.arrayOne;
         expect(items.length).to.eql(3);
         expect(items[0]).to.eql('a');
         expect(items[1]).to.eql('b');
